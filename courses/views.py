@@ -30,6 +30,7 @@ class Course(MethodView):
         """
         Delete a course by id
         """
+        pass
 
 
 @blp.route("/course/<int:course_id>/enroll")
@@ -38,6 +39,7 @@ class CourseEnroll(MethodView):
         """
         Enrolling for a course
         """
+        pass
 
 
 @blp.route("/student/<int:student_id>/courses/")
@@ -51,21 +53,6 @@ class StudentCourseList(MethodView):
     def patch(self, student_id):
         """
         Unenroll a student from a course
-        """
-        pass
-
-
-@blp.route('/teacher/<int:teacher_id>/courses')
-class TeacherCourseList(MethodView):
-    def get(self, teacher_id):
-        """
-        Get all courses a teacher takes
-        """
-        pass
-
-    def patch(self, teacher_id):
-        """
-        Remove a course from the courses a teacher takes
         """
         pass
 
