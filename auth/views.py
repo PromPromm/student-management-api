@@ -5,7 +5,9 @@ from schemas import PlainUserSchema, UserLoginSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.user import User
 from utils import db, generate_student_id
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
+from models.blocklist import TokenBlocklist
+from datetime import datetime, timezone
 
 blp = Blueprint("auth", __name__, description='Authentication and Authorization Operations')
 
@@ -53,17 +55,26 @@ class UserLogin(MethodView):
 
 @blp.route('/refresh')
 class TokenRefresh(MethodView):
+    @jwt_required(refresh=True)
     def post(self):
         """
         Generates refresh token
         """
-        pass
+        user_id = get_jwt_identity()
+        access_token = create_access_token(identity=user_id, fresh=False)
+        return {"access_token": access_token}, 200
+    
 
 @blp.route('/logout')
 class Logout(MethodView):
+    @jwt_required(fresh=True)
     def delete(self):
         """
         Logouts a user and blacklist jwt token
         """
-        pass
-
+        jti = get_jwt()["jti"]
+        token = TokenBlocklist(jti=jti, created_at=datetime.now(timezone.utc))
+        db.session.add(token)
+        db.session.commit()
+        return {"message": "User successfully logged out"}
+        
