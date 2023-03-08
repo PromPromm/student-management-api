@@ -9,6 +9,7 @@ from utils import db
 from models.courses import Course
 from models.user import User
 from models.blocklist import TokenBlocklist
+from flask_jwt_extended import JWTManager
 
 
 def create_app(config=config_dict['dev']):
@@ -19,6 +20,8 @@ def create_app(config=config_dict['dev']):
     db.init_app(app)
 
     api = Api(app)
+
+    jwt = JWTManager(app)
 
     migrate = Migrate(app, db)
 

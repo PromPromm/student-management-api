@@ -12,6 +12,10 @@ class PlainUserSchema(Schema):
     last_name = fields.Str(required=True)
     email = fields.Str(required=True)
 
+class UserLoginSchema(Schema):
+    student_id = fields.Str(required=True)
+    password = fields.Str(required=True)
+
 class UserSchema(PlainUserSchema):
     student_id = fields.Str(dump_only=True)
     password = fields.Str(required=True)
