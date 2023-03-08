@@ -3,7 +3,7 @@ from flask_smorest import Blueprint
 from flask import abort
 from schemas import PlainUserSchema, UserLoginSchema
 from werkzeug.security import generate_password_hash, check_password_hash
-from models.user import User
+from models.user import User, EnrollmentStatus
 from utils import db, generate_student_id
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from models.blocklist import TokenBlocklist
@@ -12,12 +12,12 @@ from datetime import datetime, timezone
 blp = Blueprint("auth", __name__, description='Authentication and Authorization Operations')
 
 
-@blp.route('/signup')
-class UserRegister(MethodView):
+@blp.route('/students/signup')
+class StudentRegister(MethodView):
     @blp.arguments(PlainUserSchema)
     def post(self, user_data):
         """
-        Register a user, student
+        Register a student
         """
         user = User.query.filter_by(email=user_data['email']).first()
         if user:
@@ -33,7 +33,32 @@ class UserRegister(MethodView):
         db.session.add(new_user)
         db.session.commit()
 
-        return {"message": "User successfully created", "student_id": new_user.student_id, "password": new_user.password}, 201
+        return {"message": "Student successfully created", "student_id": new_user.student_id, "password": new_user.password}, 201
+    
+
+@blp.route('/admin/signup')
+class AdminRegister(MethodView):
+    @blp.arguments(PlainUserSchema)
+    def post(self, user_data):
+        """
+        Register an admin
+        """
+        user = User.query.filter_by(email=user_data['email']).first()
+        if user:
+            abort(409, 'This user already exists')
+        password = user_data["last_name"] + user_data["first_name"][0:2]
+        new_user = User(
+            first_name=user_data["first_name"],
+            last_name=user_data["last_name"],
+            email=user_data["email"],
+            password=generate_password_hash(password),
+            enrollment_status='ADMIN',
+            is_admin=True
+        )
+        db.session.add(new_user)
+        db.session.commit()
+
+        return {"message": "Admin successfully created", "password": new_user.password}, 201
 
 
 
