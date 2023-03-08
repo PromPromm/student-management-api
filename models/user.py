@@ -11,6 +11,7 @@ class EnrollmentStatus(Enum):
     ACTIVE = 'active'
     WAITLIST = 'in_waitlist'
     EXPELLED = 'expelled'
+    ADMIN = 'admin'
     
 
 class User(db.Model):
