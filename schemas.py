@@ -12,11 +12,15 @@ class PlainUserSchema(Schema):
     last_name = fields.Str(required=True)
     email = fields.Str(required=True)
 
-class UserLoginSchema(Schema):
+class StudentLoginSchema(Schema):
     student_id = fields.Str(required=True)
     password = fields.Str(required=True)
 
-class StudentChangePasswordSchema(UserLoginSchema):
+class AdminLoginSchema(Schema):
+    email = fields.Str(required=True)
+    password = fields.Str(required=True)
+
+class StudentChangePasswordSchema(StudentLoginSchema):
     new_password = fields.Str(required=True)
     confirm_new_password = fields.Str(required=True)
 

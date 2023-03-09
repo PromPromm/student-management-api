@@ -1,7 +1,7 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import abort
-from schemas import PlainUserSchema, UserLoginSchema
+from schemas import PlainUserSchema, StudentLoginSchema, AdminLoginSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.user import User, EnrollmentStatus
 from utils import db, generate_student_id
@@ -62,14 +62,30 @@ class AdminRegister(MethodView):
 
 
 
-@blp.route('/login')
-class UserLogin(MethodView):
-    @blp.arguments(UserLoginSchema)
+@blp.route('/student/login')
+class StudentLogin(MethodView):
+    @blp.arguments(StudentLoginSchema)
     def post(self, user_data):
         """
-        Login a user and generate access token
+        Login a student and generate access token
         """
         user = User.query.filter_by(student_id=user_data["student_id"]).first()
+
+        if user and check_password_hash(user.password, user_data["password"]):
+            access_token = create_access_token(identity=user.id, fresh=True)
+            refresh_token = create_refresh_token(identity=user.id)
+            return {"access_token": access_token, "refresh_token": refresh_token}, 200
+        abort(401, 'Invalid credentials')
+
+
+@blp.route('/admin/login')
+class AdminLogin(MethodView):
+    @blp.arguments(AdminLoginSchema)
+    def post(self, user_data):
+        """
+        Login admin and generate access token
+        """
+        user = User.query.filter_by(email=user_data["email"]).first()
 
         if user and check_password_hash(user.password, user_data["password"]):
             access_token = create_access_token(identity=user.id, fresh=True)
