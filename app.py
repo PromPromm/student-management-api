@@ -4,6 +4,7 @@ from config import config_dict
 from auth import blp as AuthBlueprint
 from courses import blp as CourseBlueprint
 from student import blp as StudentBlueprint
+from admin import blp as AdminBlueprint
 from flask_migrate import Migrate
 from utils import db
 from models.courses import Course
@@ -72,6 +73,7 @@ def create_app(config=config_dict['dev']):
     api.register_blueprint(AuthBlueprint)
     api.register_blueprint(CourseBlueprint)
     api.register_blueprint(StudentBlueprint)
+    api.register_blueprint(AdminBlueprint)
 
     @app.shell_context_processor
     def make_shell_context():
