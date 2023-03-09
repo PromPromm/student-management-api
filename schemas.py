@@ -24,9 +24,7 @@ class StudentChangePasswordSchema(StudentLoginSchema):
     new_password = fields.Str(required=True)
     confirm_new_password = fields.Str(required=True)
 
-class AdminChangePasswordSchema(Schema):
-    email = fields.Str(required=True)
-    password = fields.Str(required=True)
+class AdminChangePasswordSchema(AdminLoginSchema):
     new_password = fields.Str(required=True)
     confirm_new_password = fields.Str(required=True)
 

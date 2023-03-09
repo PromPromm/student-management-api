@@ -44,9 +44,9 @@ class Student(MethodView):
         """
         Delete a student by id
         """
-        student = User.get_by_id(student_id)
+        user = User.get_by_id(student_id)
 
-        db.session.delete(student)
+        db.session.delete(user)
         db.session.commit()
 
         return {"message": "Student deleted"}
