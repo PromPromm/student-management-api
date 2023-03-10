@@ -55,7 +55,7 @@ class CourseEnroll(MethodView):
         pass
 
 
-@blp.route("/student/<int:student_id>/courses/")
+@blp.route("/student/<int:student_id>/courses")
 class StudentCourseList(MethodView):
     def get(self, student_id):
         """

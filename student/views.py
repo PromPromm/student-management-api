@@ -1,9 +1,9 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask import abort
+from flask import abort, request
 from flask_jwt_extended import jwt_required
 from models.user import User
-from schemas import UserSchema, StudentChangePasswordSchema
+from schemas import UserSchema, StudentChangePasswordSchema, ChangeEnrollmentStatusSchema
 from utils import db
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -33,11 +33,18 @@ class Student(MethodView):
         return student
 
 
-    def patch(self, student_id):
+    @blp.arguments(ChangeEnrollmentStatusSchema)
+    @blp.response(201, UserSchema)
+    @jwt_required()
+    def patch(self, data, student_id):
         """
         Update student enrollment status
         """
-        pass
+        student = User.get_by_id(student_id)
+        student.enrollment_status = data['enrollment_status']
+        db.session.commit()
+        return student
+        
 
     @jwt_required()
     def delete(self, student_id):

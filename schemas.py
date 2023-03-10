@@ -28,6 +28,9 @@ class AdminChangePasswordSchema(AdminLoginSchema):
     new_password = fields.Str(required=True)
     confirm_new_password = fields.Str(required=True)
 
+class ChangeEnrollmentStatusSchema(Schema):
+    enrollment_status = fields.Enum(EnrollmentStatus, by_value=True)
+
 class UserSchema(PlainUserSchema):
     student_id = fields.Str(dump_only=True)
     password = fields.Str(required=True)
