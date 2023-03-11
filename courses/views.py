@@ -2,7 +2,9 @@ from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask_jwt_extended import jwt_required
 from models.courses import Course
-from schemas import PlainCourseSchema
+from models.user import User
+from utils import db
+from schemas import PlainCourseSchema, UserSchema
 from flask import abort
 
 blp = Blueprint("courses", __name__, description='Operations on courses')
@@ -46,37 +48,62 @@ class CoursebyId(MethodView):
         return course
 
 
-@blp.route("/course/<int:course_id>/enroll")
+@blp.route("/course/<int:course_id>/enroll/<int:student_id>")
 class CourseEnroll(MethodView):
-    def post(self):
+    @jwt_required()
+    @blp.response(201, UserSchema)
+    def post(self, course_id, student_id):
         """
         Enrolling for a course
         """
-        pass
+        course = Course.get_by_id(course_id)
+        student = User.get_by_id(student_id)
+        student.courses.append(course)
+
+        db.session.commit()
+        return student
+    
+
+@blp.route("/course/<int:course_id>/unenroll/<int:student_id>")
+class CourseUnEnroll(MethodView):
+    @blp.response(201, UserSchema)
+    @jwt_required()
+    def patch(self, student_id, course_id):
+        """
+        Unenroll a student from a course
+        """
+        course = Course.get_by_id(course_id)
+        student = User.get_by_id(student_id)
+        student.courses.remove(course)
+        
+        db.session.commit()
+        return student
 
 
-@blp.route("/student/<int:student_id>/courses")
+@blp.route("/courses/<int:student_id>")
 class StudentCourseList(MethodView):
+    @jwt_required()
+    @blp.response(200, PlainCourseSchema(many=True))
     def get(self, student_id):
         """
         Get all courses a student offers
         """
-        pass
-
-    def patch(self, student_id):
-        """
-        Unenroll a student from a course
-        """
-        pass
+        student = User.get_by_id(student_id)
+        return student.courses
+    
 
 
 @blp.route("/course/<int:course_id>/students")
 class CourseStudentsList(MethodView):
+    @blp.response(200, UserSchema(many=True))
+    @jwt_required()
     def get(self, course_id):
         """
         Get all students that take a course
         """
-        pass
+        course = Course.get_by_id(course_id)
+        return course.users
+        
 
 @blp.route("/course/<int:course_id>/score-upload")
 class ScoreUpload(MethodView):

@@ -37,6 +37,6 @@ class UserSchema(PlainUserSchema):
     enrollment_status = fields.Enum(EnrollmentStatus, by_value=True)
     is_admin = fields.Boolean()
     date_created = fields.DateTime()
-    courses = fields.Nested(PlainCourseSchema())
+    courses = fields.List(fields.Nested(PlainCourseSchema()))
 
     
