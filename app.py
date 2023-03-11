@@ -9,6 +9,7 @@ from flask_migrate import Migrate
 from utils import db
 from models.courses import Course
 from models.user import User
+from models.scores import Score
 from models.blocklist import TokenBlocklist
 from flask_jwt_extended import JWTManager
 

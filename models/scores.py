@@ -1,11 +1,11 @@
 from utils import db
 
-class Course(db.Model):
-    __tablename__='course'
+class Score(db.Model):
+    __tablename__='score'
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    name = db.Column(db.String(45), nullable=False, unique=True)
-    teacher = db.Column(db.String(45), nullable=False)
-    scores = db.relationship('Score', backref='course')
+    score = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
     
 
     def __repr__(self):

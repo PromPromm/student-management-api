@@ -26,6 +26,7 @@ class User(db.Model):
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     is_admin = db.Column(db.Boolean, default=False)
     courses = db.relationship('Course', secondary=student_course, backref='users')
+    scores = db.relationship('Score', backref='user')
 
     def __repr__(self):
         return f'<User {self.student_id}>'
