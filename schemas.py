@@ -39,4 +39,7 @@ class UserSchema(PlainUserSchema):
     date_created = fields.DateTime()
     courses = fields.List(fields.Nested(PlainCourseSchema()))
 
+class ScoreUploadSchema(Schema):
+    score = fields.Dict(keys=fields.Str(), values=fields.Integer())
+
     

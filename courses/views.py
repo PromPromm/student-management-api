@@ -3,9 +3,10 @@ from flask_smorest import Blueprint
 from flask_jwt_extended import jwt_required
 from models.courses import Course
 from models.user import User
+from models.scores import Score
 from utils import db
-from schemas import PlainCourseSchema, UserSchema
-from flask import abort
+from schemas import PlainCourseSchema, UserSchema, ScoreUploadSchema
+from flask import abort, jsonify
 
 blp = Blueprint("courses", __name__, description='Operations on courses')
 
@@ -83,32 +84,50 @@ class CourseUnEnroll(MethodView):
 @blp.route("/courses/<int:student_id>")
 class StudentCourseList(MethodView):
     @jwt_required()
-    @blp.response(200, PlainCourseSchema(many=True))
     def get(self, student_id):
         """
         Get all courses a student offers
         """
+        course_list = []
         student = User.get_by_id(student_id)
-        return student.courses
+        for course in student.courses:
+            course_list.append(course.name)
+        return jsonify(course_list)
     
 
 
 @blp.route("/course/<int:course_id>/students")
 class CourseStudentsList(MethodView):
-    @blp.response(200, UserSchema(many=True))
     @jwt_required()
     def get(self, course_id):
         """
         Get all students that take a course
         """
+        student_id_list = []
         course = Course.get_by_id(course_id)
-        return course.users
+        for student in course.users:
+            student_id_list.append(student.student_id)
+        return jsonify(student_id_list)
         
 
 @blp.route("/course/<int:course_id>/score-upload")
 class ScoreUpload(MethodView):
-    def post(self, course_id):
+    @blp.arguments(ScoreUploadSchema)
+    def post(self, result_data, course_id):
         """
         Upload course results
         """
-        pass
+        data = list(result_data.values())
+        course = Course.get_by_id(course_id)
+        for student_id, score in data[0].items():
+            student = User.query.filter_by(student_id=student_id).first()
+            print(student.courses)
+            if course in student.courses:
+                existing_score = Score.query.filter_by(user_id=student.id, course_id=course_id).first()
+                if existing_score:
+                    abort(500, "Score already exists for this course")
+                score = Score(score=score, course_id=course_id, user_id=student.id)
+                db.session.add(score)
+                db.session.commit()
+                return {"message": "Result uploaded"}
+            return {"message": "Student isn't registered for this course"}
