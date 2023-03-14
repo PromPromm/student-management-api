@@ -51,7 +51,11 @@ class AdminList(MethodView):
 class Admin(MethodView):
     @jwt_required(fresh=True)
     @super_admin_required()
-    @blp.doc(description='Delete an administrator by id. This method can be accessed by only the SUPER admin')
+    @blp.doc(description='Delete an administrator by id. This method can be accessed by only the SUPER admin. Takes a fresh jwt access token',
+             params= {
+                        'admin_id': "The id of the admin to delete"
+                            }
+             )
     def delete(self, admin_id):
         """
         Delete an admin by id

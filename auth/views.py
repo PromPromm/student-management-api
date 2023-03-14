@@ -84,6 +84,9 @@ class StudentLogin(MethodView):
 
         # checks if student exists and if the password entered is the same as the one saved in the database.
         if user and check_password_hash(user.password, user_data["password"]):
+            # checks if user has been expelled
+            if user.enrollment_status == EnrollmentStatus.EXPELLED:
+                return {"Error": "You are no longer a student"}, HTTPStatus.UNAUTHORIZED
             access_token = create_access_token(identity=user.id, fresh=True, additional_claims={"is_administrator": False})
             refresh_token = create_refresh_token(identity=user.id, additional_claims={"is_administrator": False})
             return {"access_token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
