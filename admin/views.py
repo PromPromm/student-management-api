@@ -6,44 +6,52 @@ from schemas import UserSchema, AdminChangePasswordSchema
 from utils import db
 from werkzeug.security import check_password_hash, generate_password_hash
 from flask_jwt_extended import jwt_required
+from utils import admin_required, super_admin_required
+from http import HTTPStatus
 
 blp = Blueprint("admins", __name__, description='Operations on admins')
 
 @blp.route('/admin/change_password')
 class AdminChangePassword(MethodView):
     @blp.arguments(AdminChangePasswordSchema)
+    @blp.doc(description='Change admin password. Can be accessed by only an admin')
     @blp.response(200, UserSchema)
-    def patch(self, user_data):
+    def put(self, user_data):
         """
-        Endpoint for admin to change the automatically generated password
+        Admin change password route
         """
         user = User.query.filter_by(email=user_data['email']).first()
 
+        # checks if user exists and password matches
         if user and check_password_hash(user.password, user_data["password"]):
+            # check if the new_password field and confirm_new_password field is the same
             if user_data["new_password"] == user_data["confirm_new_password"]:
                 user.password = generate_password_hash(user_data["new_password"])
                 db.session.commit()
-                return user
-            abort(401, "New password and confirm password do not match")
-        abort(401, 'Invalid credentials')
+                return user, HTTPStatus.OK
+            return {"Error": "New password and confirm password do not match"}, HTTPStatus.BAD_REQUEST
+        return {"Error": "New password and confirm password do not match"}, HTTPStatus.FORBIDDEN
 
 
 @blp.route("/admin")
 class AdminList(MethodView):
     @blp.response(200, UserSchema(many=True))
+    @blp.doc(description='Retrieve all administrators. This method can be accessed by only an admin')
     @jwt_required()
+    @admin_required()
     def get(self):
         """
         Get all administrators
         """
         admins = User.query.filter(User.is_admin == True)
-        return admins
+        return admins, HTTPStatus.OK
     
-
 
 @blp.route("/admin/<int:admin_id>")
 class Admin(MethodView):
-    @jwt_required()
+    @jwt_required(fresh=True)
+    @super_admin_required()
+    @blp.doc(description='Delete an administrator by id. This method can be accessed by only the SUPER admin')
     def delete(self, admin_id):
         """
         Delete an admin by id
@@ -53,4 +61,4 @@ class Admin(MethodView):
         db.session.delete(user)
         db.session.commit()
 
-        return {"message": "Admin deleted"}
+        return {"message": "Admin deleted"}, HTTPStatus.OK
