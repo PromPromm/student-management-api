@@ -12,6 +12,7 @@ from models.user import User
 from models.scores import Score
 from models.blocklist import TokenBlocklist
 from flask_jwt_extended import JWTManager
+from decouple import config as configuration
 
 
 def create_app(config=config_dict['dev']):
@@ -26,6 +27,19 @@ def create_app(config=config_dict['dev']):
     jwt = JWTManager(app)
 
     migrate = Migrate(app, db)
+
+    @jwt.additional_claims_loader
+    def add_claim_to_jwt(identity):
+        email = User.get_by_id(identity).email
+        if email == configuration('EMAIL'):
+            return {"super_admin": True}
+        return {"super_admin": False}
+    
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload: dict) -> bool:
+        jti = jwt_payload["jti"]
+        token = TokenBlocklist.query.filter_by(jti=jti).first()
+        return token is not None
 
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
@@ -57,7 +71,6 @@ def create_app(config=config_dict['dev']):
                 }
             ), 401
         )
-
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
