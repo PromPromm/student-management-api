@@ -84,8 +84,8 @@ class StudentLogin(MethodView):
 
         # checks if student exists and if the password entered is the same as the one saved in the database.
         if user and check_password_hash(user.password, user_data["password"]):
-            access_token = create_access_token(identity=user.id, fresh=True)
-            refresh_token = create_refresh_token(identity=user.id)
+            access_token = create_access_token(identity=user.id, fresh=True, additional_claims={"is_administrator": False})
+            refresh_token = create_refresh_token(identity=user.id, additional_claims={"is_administrator": False})
             return {"access_token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
         return {"Error": "Invalid credentials"}, HTTPStatus.UNAUTHORIZED
 
@@ -103,7 +103,7 @@ class AdminLogin(MethodView):
         # checks if admin exists and if the password entered is the same as the one saved in the database.
         if user and check_password_hash(user.password, user_data["password"]):
             access_token = create_access_token(identity=user.id, fresh=True, additional_claims={"is_administrator": True})
-            refresh_token = create_refresh_token(identity=user.id)
+            refresh_token = create_refresh_token(identity=user.id, additional_claims={"is_administrator": True})
             return {"access_token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
         return {"Error": "Invalid credentials"}, HTTPStatus.UNAUTHORIZED
         
@@ -117,7 +117,11 @@ class TokenRefresh(MethodView):
         Generates refresh token
         """
         user_id = get_jwt_identity()
-        access_token = create_access_token(identity=user_id, fresh=False)
+        user = User.get_by_id(user_id)
+        if user.is_admin:
+            access_token = create_access_token(identity=user_id, fresh=False, additional_claims={"is_administrator": True})
+            return {"access_token": access_token}, HTTPStatus.OK
+        access_token = create_access_token(identity=user_id, fresh=False, additional_claims={"is_administrator": False})
         return {"access_token": access_token}, HTTPStatus.OK
     
 

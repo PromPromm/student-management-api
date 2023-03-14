@@ -11,27 +11,27 @@ def generate_student_id():
     return student_id
 
 def admin_required():
-        def wrapper(fn):
-            @wraps(fn)
-            def decorator(*args, **kwargs):
-                verify_jwt_in_request()
-                claims = get_jwt()
-                if claims["is_administrator"]:
-                    return fn(*args, **kwargs)
-                else:
-                    return jsonify(msg="Admins only!"), 403
-            return decorator
-        return wrapper
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            if claims["is_administrator"]:
+                return fn(*args, **kwargs)
+            else:
+                return jsonify(msg="Admins only!"), 403
+        return decorator
+    return wrapper
 
 def super_admin_required():
-        def wrapper(fn):
-            @wraps(fn)
-            def decorator(*args, **kwargs):
-                verify_jwt_in_request()
-                claims = get_jwt()
-                if claims["super_admin"]:
-                    return fn(*args, **kwargs)
-                else:
-                    return jsonify(msg="Suoer Admins only!"), 403
-            return decorator
-        return wrapper
+    def wrapper(fn):
+        @wraps(fn)
+        def decorator(*args, **kwargs):
+            verify_jwt_in_request()
+            claims = get_jwt()
+            if claims["super_admin"]:
+                return fn(*args, **kwargs)
+            else:
+                return jsonify(msg="Super Admins only!"), 403
+        return decorator
+    return wrapper

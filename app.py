@@ -27,7 +27,7 @@ def create_app(config=config_dict['dev']):
     jwt = JWTManager(app)
 
     migrate = Migrate(app, db)
-
+    
     @jwt.additional_claims_loader
     def add_claim_to_jwt(identity):
         email = User.get_by_id(identity).email
