@@ -6,6 +6,7 @@ class Score(db.Model):
     score = db.Column(db.Integer, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     course_id = db.Column(db.Integer, db.ForeignKey('course.id'))
+    grade = db.Column(db.String(1), nullable=False)
     
 
     def __repr__(self):

@@ -187,16 +187,34 @@ class ScoreUpload(MethodView):
         """
         course = Course.get_by_id(course_id)
         student = User.query.filter_by(student_id=result_data['student_id']).first()
+        score=result_data['score']
+
+        # check for grades of score
+        if score >= 70:
+            grade = 'A'
+        elif (score < 70 and score >= 60):
+            grade = 'B'
+        elif (score < 60 and score >=50):
+            grade = 'C'
+        elif (score < 50 and score >= 45):
+            grade = 'D'
+        elif (score < 45 and score >= 40):
+            grade = 'E'
+        else:
+            grade = 'F'
+        
+
         # checks if student is registered for the course
         if course in student.courses:
             existing_score = Score.query.filter_by(user_id=student.id, course_id=course_id).first()
             # checks if score exists and updates
             if existing_score:
                 existing_score.score = result_data['score']
+                existing_score.grade = grade
                 db.session.commit()
                 return {"message": "Result updated"}, HTTPStatus.ACCEPTED
             # creates score if it does not exist
-            new_score = Score(score=result_data['score'], course_id=course_id, user_id=student.id)
+            new_score = Score(score=result_data['score'], course_id=course_id, user_id=student.id, grade=grade)
             db.session.add(new_score)
             db.session.commit()
             return {"message": "Result uploaded"}, HTTPStatus.CREATED
