@@ -40,6 +40,5 @@ class UserSchema(PlainUserSchema):
     courses = fields.List(fields.Nested(PlainCourseSchema()))
 
 class ScoreUploadSchema(Schema):
-    score = fields.Dict(keys=fields.Str(), values=fields.Integer())
-
-    
+    student_id = fields.Str(required=True)
+    score = fields.Int()
