@@ -1,6 +1,5 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask import abort
 from models.user import User
 from schemas import UserSchema, AdminChangePasswordSchema
 from utils import db
@@ -15,7 +14,7 @@ blp = Blueprint("admins", __name__, description='Operations on admins')
 class AdminChangePassword(MethodView):
     @blp.arguments(AdminChangePasswordSchema)
     @blp.doc(description='Change admin password. Can be accessed by only an admin')
-    @blp.response(200, UserSchema)
+    # @blp.response(200, UserSchema)
     def put(self, user_data):
         """
         Admin change password route
@@ -28,9 +27,9 @@ class AdminChangePassword(MethodView):
             if user_data["new_password"] == user_data["confirm_new_password"]:
                 user.password = generate_password_hash(user_data["new_password"])
                 db.session.commit()
-                return user, HTTPStatus.OK
+                return {"message": "Password successfully changed. Proceed to login"}, HTTPStatus.OK
             return {"Error": "New password and confirm password do not match"}, HTTPStatus.BAD_REQUEST
-        return {"Error": "New password and confirm password do not match"}, HTTPStatus.FORBIDDEN
+        return {"Error": "Invalid credentials"}, HTTPStatus.FORBIDDEN
 
 
 @blp.route("/admin")

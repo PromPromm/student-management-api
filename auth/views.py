@@ -1,6 +1,5 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
-from flask import abort
 from schemas import PlainUserSchema, StudentLoginSchema, AdminLoginSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.user import User, EnrollmentStatus
@@ -27,7 +26,7 @@ class StudentRegister(MethodView):
         user = User.query.filter_by(email=user_data['email']).first()
         # checks if user exists
         if user:
-            return {"message": "User exists"}, HTTPStatus.CONFLICT
+            return {"Error": "User exists"}, HTTPStatus.CONFLICT
         # generate the default user password
         password = (user_data["last_name"] + user_data["first_name"][0:2]).lower()
         # create new user[student]
@@ -40,14 +39,14 @@ class StudentRegister(MethodView):
         )
         db.session.add(new_user)
         db.session.commit()
-        return {"message": "Student successfully created", "student_id": new_user.student_id, "password": new_user.password}, HTTPStatus.CREATED
+        return {"message": "Student successfully created", "student_id": new_user.student_id}, HTTPStatus.CREATED
     
 
 @blp.route('/admin/signup')
 class AdminRegister(MethodView):
     @blp.arguments(PlainUserSchema)
     @super_admin_required()
-    @blp.doc(description="This route can be accessed only by a SUPER administrator")
+    @blp.doc(description="This route can be accessed only by the SUPER administrator")
     def post(self, user_data):
         """
         Register an admin
@@ -55,7 +54,7 @@ class AdminRegister(MethodView):
         user = User.query.filter_by(email=user_data['email']).first()
         # checks if user exists
         if user:
-            return {"message": "User exists"}, HTTPStatus.CONFLICT
+            return {"Error": "User exists"}, HTTPStatus.CONFLICT
         # generate the default user password
         password = (user_data["last_name"] + user_data["first_name"][0:2]).lower()
         # create new user[admin]
@@ -69,7 +68,7 @@ class AdminRegister(MethodView):
         )
         db.session.add(new_user)
         db.session.commit()
-        return {"message": "Admin successfully created", "password": new_user.password}, HTTPStatus.CREATED
+        return {"message": "Admin successfully created"}, HTTPStatus.CREATED
 
 
 @blp.route('/student/login')

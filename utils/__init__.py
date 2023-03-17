@@ -19,7 +19,7 @@ def admin_required():
             if claims["is_administrator"]:
                 return fn(*args, **kwargs)
             else:
-                return jsonify(msg="Admins only!"), 403
+                return jsonify(Error="Admins only!"), 403
         return decorator
     return wrapper
 
@@ -32,7 +32,7 @@ def super_admin_required():
             if claims["super_admin"]:
                 return fn(*args, **kwargs)
             else:
-                return jsonify(msg="Super Admins only!"), 403
+                return jsonify(Error="Super Admins only!"), 403
         return decorator
     return wrapper
 

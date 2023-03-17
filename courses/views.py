@@ -6,7 +6,7 @@ from models.user import User, EnrollmentStatus
 from models.scores import Score
 from utils import db
 from schemas import PlainCourseSchema, UserSchema, ScoreUploadSchema
-from flask import abort, jsonify
+from flask import jsonify
 from utils import admin_required
 from http import HTTPStatus
 
@@ -31,7 +31,6 @@ class CourseList(MethodView):
     @admin_required()
     @blp.doc(description="Create a course. Can be accessed by only admins")
     @blp.arguments(PlainCourseSchema)
-    @blp.response(201, PlainCourseSchema)
     def post(self, course_data):
         """
         Create a course
@@ -39,10 +38,10 @@ class CourseList(MethodView):
         course = Course.query.filter_by(name=course_data['name']).first()
         # checks if course with that name exists
         if course:
-            abort(400, "Course with that name exists")
+            return {"Error": "Course with that name exists"}, HTTPStatus.BAD_REQUEST
         new_course = Course(name=course_data["name"], teacher=course_data["teacher"], unit=course_data['unit'])
         new_course.save()
-        return new_course, HTTPStatus.CREATED
+        return {"Name": new_course.name, "Teacher": new_course.teacher, "Unit": new_course.unit}, HTTPStatus.CREATED
 
 
 @blp.route("/course/<int:course_id>")
@@ -91,7 +90,6 @@ class CourseEnroll(MethodView):
 
 @blp.route("/course/<int:course_id>/unenroll/<int:student_id>")
 class CourseUnEnroll(MethodView):
-    @blp.response(200, UserSchema)
     @jwt_required()
     @admin_required()
     @blp.doc(description='Unenroll a student in a course. Can be accessed by only admins',
@@ -109,9 +107,14 @@ class CourseUnEnroll(MethodView):
         # checks if student has course registered
         if course in student.courses:
             student.courses.remove(course)
+            # checks if the course has a score recorded
+            score = Score.query.filter_by(user_id=student_id , course_id=course_id).first()
+            if score:
+                # deletes the score
+                db.session.delete(score)
             db.session.commit()
-            return student, HTTPStatus.OK
-        return {"message": "Student is not enrolled in this course"}, HTTPStatus.BAD_REQUEST
+            return {"Message": "Unenrolled student from course"}, HTTPStatus.OK
+        return {"Error": "Student is not enrolled in this course"}, HTTPStatus.BAD_REQUEST
 
 
 @blp.route("/courses/<path:student_id>")
@@ -121,7 +124,7 @@ class StudentCourseList(MethodView):
               'This route can be accessed by an admin or the student whose id is in the student_id variable of the url.'
               'Student cannot access the route if expelled.',
              params={
-                "student_id": "The id of the student"
+                "student_id": "The student_id of the student"
              }
              )
     def get(self, student_id):
@@ -182,36 +185,41 @@ class ScoreUpload(MethodView):
         """
         course = Course.get_by_id(course_id)
         student = User.query.filter_by(student_id=result_data['student_id']).first()
-        score=result_data['score']
+        # checks if student exists
+        if student:
+            score=result_data['score']
 
-        # check for grades of score
-        if score >= 70:
-            grade = 'A'
-        elif (score < 70 and score >= 60):
-            grade = 'B'
-        elif (score < 60 and score >=50):
-            grade = 'C'
-        elif (score < 50 and score >= 45):
-            grade = 'D'
-        elif (score < 45 and score >= 40):
-            grade = 'E'
-        else:
-            grade = 'F'
+            # check for grades of score
+            if score >= 70:
+                grade = 'A'
+            elif (score < 70 and score >= 60):
+                grade = 'B'
+            elif (score < 60 and score >=50):
+                grade = 'C'
+            elif (score < 50 and score >= 45):
+                grade = 'D'
+            elif (score < 45 and score >= 40):
+                grade = 'E'
+            else:
+                grade = 'F'
+
+            # checks if student is registered for the course
+            if course in student.courses:
+                existing_score = Score.query.filter_by(user_id=student.id, course_id=course_id).first()
+                # checks if score exists and updates
+                if existing_score:
+                    existing_score.score = result_data['score']
+                    existing_score.grade = grade
+                    db.session.commit()
+                    return {"message": "Result updated"}, HTTPStatus.ACCEPTED
+                # creates score if it does not exist
+                new_score = Score(score=result_data['score'], course_id=course_id, user_id=student.id, grade=grade)
+                db.session.add(new_score)
+                db.session.commit()
+                return {"message": "Result uploaded"}, HTTPStatus.CREATED
+            return {"message": "Student isn't registered for this course"}, HTTPStatus.BAD_REQUEST
+        return {"Error": "Student does not exist"}, HTTPStatus.NOT_FOUND
         
 
-        # checks if student is registered for the course
-        if course in student.courses:
-            existing_score = Score.query.filter_by(user_id=student.id, course_id=course_id).first()
-            # checks if score exists and updates
-            if existing_score:
-                existing_score.score = result_data['score']
-                existing_score.grade = grade
-                db.session.commit()
-                return {"message": "Result updated"}, HTTPStatus.ACCEPTED
-            # creates score if it does not exist
-            new_score = Score(score=result_data['score'], course_id=course_id, user_id=student.id, grade=grade)
-            db.session.add(new_score)
-            db.session.commit()
-            return {"message": "Result uploaded"}, HTTPStatus.CREATED
-        return {"message": "Student isn't registered for this course"}, HTTPStatus.BAD_REQUEST
+        
             
