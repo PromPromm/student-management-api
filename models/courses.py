@@ -5,6 +5,7 @@ class Course(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     name = db.Column(db.String(45), nullable=False, unique=True)
     teacher = db.Column(db.String(45), nullable=False)
+    unit = db.Column(db.Integer, nullable=False)
     scores = db.relationship('Score', backref='course')
     
 
