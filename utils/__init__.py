@@ -35,3 +35,18 @@ def super_admin_required():
                 return jsonify(msg="Super Admins only!"), 403
         return decorator
     return wrapper
+
+def grade_to_point_converter(grade: str) -> int:
+    if grade == 'A':
+        point = 5
+    elif grade == 'B':
+        point = 4
+    elif grade == 'C':
+        point = 3
+    elif grade == 'D':
+        point = 2
+    elif grade == 'E':
+        point = 1
+    else:
+        point = 0
+    return point

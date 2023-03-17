@@ -114,7 +114,7 @@ class CourseUnEnroll(MethodView):
         return {"message": "Student is not enrolled in this course"}, HTTPStatus.BAD_REQUEST
 
 
-@blp.route("/courses/<int:student_id>")
+@blp.route("/courses/<path:student_id>")
 class StudentCourseList(MethodView):
     @jwt_required()
     @blp.doc(description='Get all courses a student offers.'
@@ -124,7 +124,6 @@ class StudentCourseList(MethodView):
                 "student_id": "The id of the student"
              }
              )
-    # the actual student and admin should access this route
     def get(self, student_id):
         """
         Get all courses a student offers
@@ -132,21 +131,17 @@ class StudentCourseList(MethodView):
         course_list = []
         identity = get_jwt_identity()
         user = User.get_by_id(identity)
-        student = User.get_by_id(student_id)
+        student = User.query.filter_by(student_id=student_id).first()
         
-        # checks if the user accessing the route is an admin
-        if (user.is_admin == True):
-            for course in student.courses:
-                course_list.append(course.name)
-            return jsonify(course_list), HTTPStatus.OK
-    
-        # checks if it is the student whose course list is needed that is accessing the route
-        if student_id == identity:
-            for course in student.courses:
-                course_list.append(course.name)
-            return jsonify(course_list), HTTPStatus.OK
-        return {"message": "Not allowed."}, HTTPStatus.FORBIDDEN
-
+        # checks if student exists
+        if student:
+            # checks if the user accessing the route is an admin or the student whose course list is needed.
+            if (user.is_admin == True) or (identity == student.id):
+                for course in student.courses:
+                    course_list.append(course.name)
+                return jsonify(course_list), HTTPStatus.OK
+            return {"message": "Not allowed."}, HTTPStatus.FORBIDDEN
+        return {"message": "Student does not exist"}, HTTPStatus.NOT_FOUND
 
 
 @blp.route("/course/<int:course_id>/students")
