@@ -75,7 +75,7 @@ class AdminRegister(MethodView):
 @blp.route('/student/login')
 class StudentLogin(MethodView):
     @blp.arguments(StudentLoginSchema)
-    @blp.doc(description="Logs in a student and generates a jwt access token")
+    @blp.doc(description="Logs in a student and generates a jwt access token. Student cannot access this route if expelled.")
     def post(self, user_data):
         """
         Login a student and generate access token

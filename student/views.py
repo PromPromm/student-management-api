@@ -1,13 +1,15 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
 from flask import abort
-from flask_jwt_extended import jwt_required
-from models.user import User, EnrollmentStatus
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from models.user import User, EnrollmentStatus, student_course
 from schemas import UserSchema, StudentChangePasswordSchema, ChangeEnrollmentStatusSchema
 from utils import db
 from werkzeug.security import check_password_hash, generate_password_hash
-from utils import admin_required
+from utils import admin_required, grade_to_point_converter
 from http import HTTPStatus
+from models.courses import Course
+from models.scores import Score
 
 blp = Blueprint("students", __name__, description='Operations on students')
 
@@ -108,10 +110,78 @@ class StudentChangePassword(MethodView):
         abort(403, 'Invalid credentials')
 
 
-@blp.route('/student/<int:student_id>/cgpa')
-class StudentCGPA(MethodView):
+@blp.route('/student/<path:student_id>/scores')
+class StudentScoreList(MethodView):
+    @jwt_required()
+    @blp.doc(description='Get all the scores of a student in each course.'
+              'This route can be accessed by an admin or the student whose id is in the student_id variable of the url.'
+              'Student cannot access the route if expelled.',
+             params={
+                "student_id": "The student_id of the student"
+             }
+             )
     def get(self, student_id):
         """
-        Get student cgpa
+        Get student scores and grades
         """
-        pass
+        identity = get_jwt_identity()
+        user = User.get_by_id(identity)
+        
+        score_course_list = []
+        student = User.query.filter_by(student_id=student_id).first()
+        if (user.is_admin == True) or (identity == student.id):
+            if student:
+                for course in student.courses:
+                    score_in_course = {}
+                    score = Score.query.filter_by(user_id=student.id , course_id=course.id).first()
+                    score_in_course['name'] = course.name
+                    # checks if the course has a score
+                    if score:
+                        score_in_course['score'] = score.score
+                        score_in_course['grade'] = score.grade
+                    else:
+                        score_in_course['score'] = None
+                        score_in_course['grade'] = None
+                    score_course_list.append(score_in_course)
+                return score_course_list, HTTPStatus.OK
+            return {"message": "Student does not exist"}, HTTPStatus.NOT_FOUND
+        return {"message": "Not allowed."}, HTTPStatus.FORBIDDEN
+
+
+@blp.route('/student/<path:student_id>/cgpa')
+class StudentCGPA(MethodView):
+    @jwt_required()
+    @blp.doc(description='Get all the gpa of a student.'
+              'This route can be accessed by an admin or the student whose id is in the student_id variable of the url.'
+              'Student cannot access the route if expelled.',
+             params={
+                "student_id": "The student_id of the student"
+             }
+             )
+    def get(self, student_id):
+        """
+        Get student gpa
+        """
+        student = User.query.filter_by(student_id=student_id).first()
+        # checks if student exists
+        if student:
+            courses = Course.query.join(student_course).join(User).filter(User.id == student.id).all()
+            total_credit_units = 0
+            obtained_score = 0
+            for course in courses:
+                score = Score.query.filter_by(user_id=student.id , course_id=course.id).first()
+                # checks if score exists
+                if score:
+                    score_grade = grade_to_point_converter(score.grade)
+                    total_credit_units += course.unit
+                    obtained_score += (course.unit * score_grade)
+
+            if total_credit_units == 0:
+                return {
+                    'message':'Student has no score. Try uploading a score!.'}, HTTPStatus.OK
+            gpa = round( (obtained_score / total_credit_units), 2)
+            return {
+                'message': f'GPA for {student_id} is {gpa}'}, HTTPStatus.OK
+        return {"message": "Student does not exist"}, HTTPStatus.NOT_FOUND
+        
+
