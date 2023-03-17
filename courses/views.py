@@ -40,7 +40,7 @@ class CourseList(MethodView):
         # checks if course with that name exists
         if course:
             abort(400, "Course with that name exists")
-        new_course = Course(name=course_data["name"], teacher=course_data["teacher"])
+        new_course = Course(name=course_data["name"], teacher=course_data["teacher"], unit=course_data['unit'])
         new_course.save()
         return new_course, HTTPStatus.CREATED
 

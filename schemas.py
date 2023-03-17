@@ -5,6 +5,7 @@ class PlainCourseSchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True)
     teacher = fields.Str(required=True)
+    unit = fields.Int(required=True)
 
 class PlainUserSchema(Schema):
     id = fields.Int(dump_only=True)
