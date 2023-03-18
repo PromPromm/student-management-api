@@ -45,7 +45,7 @@ class StudentRegister(MethodView):
 @blp.route('/admin/signup')
 class AdminRegister(MethodView):
     @blp.arguments(PlainUserSchema)
-    @super_admin_required()
+    # @super_admin_required()
     @blp.doc(description="This route can be accessed only by the SUPER administrator")
     def post(self, user_data):
         """
