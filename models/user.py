@@ -21,7 +21,7 @@ class User(db.Model):
     last_name = db.Column(db.String(45), nullable=False)
     student_id =db.Column(db.String(15), unique=True)
     email = db.Column(db.String(50), nullable=False, unique=True)
-    password = db.Column(db.String(40), nullable=False)
+    password = db.Column(db.String, nullable=False)
     enrollment_status = db.Column(db.Enum(EnrollmentStatus), nullable=False, default=EnrollmentStatus.WAITLIST)
     date_created = db.Column(db.DateTime, default=datetime.utcnow)
     is_admin = db.Column(db.Boolean, default=False)
