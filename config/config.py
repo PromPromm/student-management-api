@@ -16,6 +16,20 @@ class Config:
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=30)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(minutes=30)
     JWT_SECRET_KEY = config('JWT_SECRET_KEY', 'topsecret')
+    API_SPEC_OPTIONS = {
+        'security':[{"bearerAuth": []}],
+        'components':{
+            "securitySchemes":
+                {
+                    "bearerAuth": {
+                        "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": "Add a JWT token to the header with ** Bearer &lt;JWT&gt; token to authorize **"
+                    }
+                }
+        }
+    }
 
 class DevConfig(Config):
     DEBUG = config('DEBUG', cast=bool)
