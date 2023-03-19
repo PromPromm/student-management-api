@@ -10,7 +10,6 @@
     <li><a href="#libraries-used">Libraries used</a></li>    
     <li><a href="#to-run-on-your-local-machine">To run on your local machine</a></li>
     <li><a href="#contact">Contact</a></li>
-      <li><a href="#super-administrator-auth-details">Super Administrator Auth details</a></li>
     <li>
       <a href="#endpoints">Endpoints</a>
       <ol>
@@ -24,6 +23,11 @@
  
 ### Live app version
 Visit [website](https://student-management-app-api.herokuapp.com/swagger-ui)
+#### Super administrator auth details on live app
+email - admin@admin.com
+password - admin
+ <p align="right"><a href="#readme-top">back to top</a></p>
+
 
 ### About
 This is a student management REST api that enables the school authorities(admin) to manage students and allow students to login and check cgpa.
@@ -82,12 +86,6 @@ Promise - promiseanuoluwa@gmail.com
  <p align="right"><a href="#readme-top">back to top</a></p>
 
 
-## Super administrator auth details
-email - admin@admin.com
-password - adminad
- <p align="right"><a href="#readme-top">back to top</a></p>
-
-
 ## Endpoints
 
 ### Auth Endpoints
@@ -110,7 +108,7 @@ password - adminad
 |  `course/<course_id>` |  _GET_  | Retrieve a course by unique identifier   | Authenticated | Admin | Course ID |
 |  `course/<course_id>/enroll/<student_id>` |  _PUT_  | Enroll a student in a course | Authenticated | Admin | Course ID, Student ID |
 |  `course/<course_id>/unenroll/<student_id>` |  _PUT_  | Unenroll a student in a course | Authenticated | Admin | Course ID, Student ID |
-|  `courses/<student_id>` |  _GET_  | Retrieve all courses a student takes | Authenticated | Admin, Student | Course ID, Student ID |
+|  `courses/<student_id>` |  _GET_  | Retrieve all courses a student takes | Authenticated | Admin, Student | Course ID, Student School ID |
 |  `courses/<course_id>/students` |  _GET_  | Retrieve all students taking a course | Authenticated | Admin | Course ID |
 |  `courses/<course_id>/score-upload` |  _PUT_  | Upload score of student in a course | Authenticated | Admin | Course ID |
  <p align="right"><a href="#readme-top">back to top</a></p>
@@ -124,8 +122,8 @@ password - adminad
 |  `/student/<student_id>` |  _PUT_  | Change a student enrollment status | Authenticated | Admin | Student ID |
 |  `/student/<student_id>` |  _DELETE_  | Delete a student by unique identifier | Authenticated | Admin | Student ID |
 |  `/student/change_password` |  _PUT_  | Student password reset  | ---- | Student | ---- |
-|  `/student/<student_id>/scores` |  _GET_  | Retrieve student scores and grades  | Authenticated | Admin, Student | Student ID |
-|  `/student/<student_id>/cgpa` |  _GET_  | Calculate and Retrieve a student gpa score   | Authenticated | Admin, Student | Student ID |
+|  `/student/<student_id>/scores` |  _GET_  | Retrieve student scores and grades  | Authenticated | Admin, Student | Student School ID |
+|  `/student/<student_id>/cgpa` |  _GET_  | Calculate and Retrieve a student gpa score   | Authenticated | Admin, Student | Student School ID |
  <p align="right"><a href="#readme-top">back to top</a></p>
 
 
