@@ -74,6 +74,25 @@ flask db migrate
 ```console
 flask db upgrade
 ```
+Navigate to `runserver.py` and change line 4 to:
+```console
+app = create_app()
+```
+Save and close the file.
+
+Create a `.env` file by running:
+```console
+touch .env
+```
+Copy the code below into the file.
+```console
+SECRET_KEY=`your secret key`
+DEBUG=True
+JWT_SECRET_KEY=`another secret key`
+EMAIL=`email of choice for super admin`
+```
+Save and close the file
+
 Run the app
 ```console
 python runserver.py
