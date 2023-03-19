@@ -103,7 +103,7 @@ class AdminLogin(MethodView):
         user = User.query.filter_by(email=user_data["email"]).first()
 
         # checks if admin exists and if the password entered is the same as the one saved in the database.
-        if user.is_admin and check_password_hash(user.password, user_data["password"]):
+        if user and check_password_hash(user.password, user_data["password"]):
             access_token = create_access_token(identity=user.id, fresh=True, additional_claims={"is_administrator": True})
             refresh_token = create_refresh_token(identity=user.id, additional_claims={"is_administrator": True})
             return {"access_token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
