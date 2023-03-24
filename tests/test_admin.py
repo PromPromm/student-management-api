@@ -69,7 +69,7 @@ class AdminTestCase(unittest.TestCase):
         admin_signup_data = {
                     "first_name": "Test",
                     "last_name": "Admin",
-                    "email": "promiseanuoluwa@gmail.com"
+                    "email": "admin@admin.com"
                 }
         
         admin_signup_data_2 = {
