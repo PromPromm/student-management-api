@@ -40,7 +40,10 @@ class DevConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(BASE_DIR, 'database.db')
     
 class TestConfig(Config):
-    pass
+    TESTING = True
+    SQLALCHEMY_ECHO = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_DATABASE_URI =  'sqlite://'
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI =  url
