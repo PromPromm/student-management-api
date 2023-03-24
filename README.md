@@ -51,7 +51,7 @@ The super admin has unlimited access to all routes in the app
 <p align="right"><a href="#readme-top">back to top</a></p>
 
 
-### To run on your local machine
+### To run the development environment on your local machine
 Clone the repository
 ```console
 git clone https://github.com/PromPromm/student-management-api
@@ -99,6 +99,17 @@ python runserver.py
 ```
  <p align="right"><a href="#readme-top">back to top</a></p>
 
+### To run the Test environment on your local machine
+Set the EMAIL variable in the `.env` to `admin@admin.com` like below
+```console
+EMAIL=admin@admin.com
+```
+
+Run pytest in the terminal
+```console
+pytest
+```
+ <p align="right"><a href="#readme-top">back to top</a></p>
 
 ### Contact
 Promise - promiseanuoluwa@gmail.com
@@ -152,5 +163,8 @@ Promise - promiseanuoluwa@gmail.com
 |  `/admin` |  _GET_  | Retrieve all administrator  | Authenticated | Admin | ---- |
 |  `/admin/change_password` |  _PUT_  | Admin password reset | ---- | Admin | ---- |
 |  `/admin/<admin_id>` |  _PUT_  | Delete an admin by unique identifier | Authenticated | Super Admin | Admin ID |
+
+*NOTE* : The routes with `Student School ID` as placeholder takes the generated student id such as `STA/2023/001` and not the primary key of the student in the database.
+This makes sense since students themselves have access to the routes that take this variable and they do not know their database id.
  <p align="right"><a href="#readme-top">back to top</a></p>
 
