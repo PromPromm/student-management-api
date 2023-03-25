@@ -1,0 +1,5 @@
+SECRET_KEY='secretkey'
+DEBUG='boolean'
+JWT_SECRET_KEY='jwtsecretkey'
+EMAIL='emailforsuperadmin'
+DATABASE_URL='databaseurl'
