@@ -1,19 +1,53 @@
 from flask.views import MethodView
 from flask_smorest import Blueprint
+from flask import url_for, redirect
 from schemas import PlainUserSchema, StudentLoginSchema, AdminLoginSchema
 from werkzeug.security import generate_password_hash, check_password_hash
 from models.user import User, EnrollmentStatus
-from utils import db, generate_student_id
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
+from utils import db, generate_student_id, mail
+from flask_jwt_extended import (
+    create_access_token,
+    create_refresh_token,
+    jwt_required,
+    get_jwt_identity,
+    get_jwt,
+)
 from models.blocklist import TokenBlocklist
 from datetime import datetime, timezone
 from http import HTTPStatus
 from utils import admin_required, super_admin_required
+from flask_mail import Message
 
-blp = Blueprint("auth", __name__, description='Authentication and Authorization Operations')
+blp = Blueprint(
+    "auth", __name__, description="Authentication and Authorization Operations"
+)
 
 
-@blp.route('/students/signup')
+def student_reset_password_email(user, password):
+    msg = Message(
+        "Student Management API Password Reset",
+        sender="noreply@demo.com",
+        recipients=[user.email],
+        body=f"""You are now a student of AltSchool Africa. Congratulations!
+        Your default password is {password}. Please visit the following link to change it
+        {url_for('api-docs.openapi_swagger_ui', _external=True)}""",
+    )
+    mail.send(msg)
+
+
+def admin_reset_password_email(user, password):
+    msg = Message(
+        "Student Management API Password Reset",
+        sender="noreply@demo.com",
+        recipients=[user.email],
+        body=f"""You have been an admin of the Student Management API of AltSchool Africa. Congratulations!
+        Your default password is {password}. Please visit the following link to change it
+        {url_for('api-docs.openapi_swagger_ui', _external=True)}""",
+    )
+    mail.send(msg)
+
+
+@blp.route("/students/signup")
 class StudentRegister(MethodView):
     @admin_required()
     @jwt_required()
@@ -23,7 +57,7 @@ class StudentRegister(MethodView):
         """
         Registers a student
         """
-        user = User.query.filter_by(email=user_data['email']).first()
+        user = User.query.filter_by(email=user_data["email"]).first()
         # checks if user exists
         if user:
             return {"Error": "User exists"}, HTTPStatus.CONFLICT
@@ -35,14 +69,18 @@ class StudentRegister(MethodView):
             last_name=user_data["last_name"],
             email=user_data["email"],
             password=generate_password_hash(password),
-            student_id=generate_student_id()
+            student_id=generate_student_id(),
         )
         db.session.add(new_user)
+        student_reset_password_email(new_user, password)
         db.session.commit()
-        return {"message": "Student successfully created", "student_id": new_user.student_id}, HTTPStatus.CREATED
-    
+        return {
+            "message": "Student successfully created",
+            "student_id": new_user.student_id,
+        }, HTTPStatus.CREATED
 
-@blp.route('/admin/signup')
+
+@blp.route("/admin/signup")
 class AdminRegister(MethodView):
     @blp.arguments(PlainUserSchema)
     # @super_admin_required()
@@ -51,7 +89,7 @@ class AdminRegister(MethodView):
         """
         Register an admin
         """
-        user = User.query.filter_by(email=user_data['email']).first()
+        user = User.query.filter_by(email=user_data["email"]).first()
         # checks if user exists
         if user:
             return {"Error": "User exists"}, HTTPStatus.CONFLICT
@@ -63,18 +101,21 @@ class AdminRegister(MethodView):
             last_name=user_data["last_name"],
             email=user_data["email"],
             password=generate_password_hash(password),
-            enrollment_status='ADMIN',
-            is_admin=True
+            enrollment_status="ADMIN",
+            is_admin=True,
         )
         db.session.add(new_user)
+        admin_reset_password_email(new_user, password)
         db.session.commit()
         return {"message": "Admin successfully created"}, HTTPStatus.CREATED
 
 
-@blp.route('/student/login')
+@blp.route("/student/login")
 class StudentLogin(MethodView):
     @blp.arguments(StudentLoginSchema)
-    @blp.doc(description="Logs in a student and generates a jwt access token. Student cannot access this route if expelled.")
+    @blp.doc(
+        description="Logs in a student and generates a jwt access token. Student cannot access this route if expelled."
+    )
     def post(self, user_data):
         """
         Login a student and generate access token
@@ -86,13 +127,22 @@ class StudentLogin(MethodView):
             # checks if user has been expelled
             if user.enrollment_status == EnrollmentStatus.EXPELLED:
                 return {"Error": "You are no longer a student"}, HTTPStatus.UNAUTHORIZED
-            access_token = create_access_token(identity=user.id, fresh=True, additional_claims={"is_administrator": False})
-            refresh_token = create_refresh_token(identity=user.id, additional_claims={"is_administrator": False})
-            return {"access_token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
+            access_token = create_access_token(
+                identity=user.id,
+                fresh=True,
+                additional_claims={"is_administrator": False},
+            )
+            refresh_token = create_refresh_token(
+                identity=user.id, additional_claims={"is_administrator": False}
+            )
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }, HTTPStatus.OK
         return {"Error": "Invalid credentials"}, HTTPStatus.UNAUTHORIZED
 
 
-@blp.route('/admin/login')
+@blp.route("/admin/login")
 class AdminLogin(MethodView):
     @blp.arguments(AdminLoginSchema)
     @blp.doc(description="Logs in an admin and generates a jwt access token")
@@ -104,13 +154,22 @@ class AdminLogin(MethodView):
 
         # checks if admin exists and if the password entered is the same as the one saved in the database.
         if user.is_admin and check_password_hash(user.password, user_data["password"]):
-            access_token = create_access_token(identity=user.id, fresh=True, additional_claims={"is_administrator": True})
-            refresh_token = create_refresh_token(identity=user.id, additional_claims={"is_administrator": True})
-            return {"access_token": access_token, "refresh_token": refresh_token}, HTTPStatus.OK
+            access_token = create_access_token(
+                identity=user.id,
+                fresh=True,
+                additional_claims={"is_administrator": True},
+            )
+            refresh_token = create_refresh_token(
+                identity=user.id, additional_claims={"is_administrator": True}
+            )
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+            }, HTTPStatus.OK
         return {"Error": "Invalid credentials"}, HTTPStatus.UNAUTHORIZED
-        
 
-@blp.route('/refresh')
+
+@blp.route("/refresh")
 class TokenRefresh(MethodView):
     @jwt_required(refresh=True)
     @blp.doc(description="Generates a refresh jwt access token")
@@ -121,13 +180,19 @@ class TokenRefresh(MethodView):
         user_id = get_jwt_identity()
         user = User.get_by_id(user_id)
         if user.is_admin:
-            access_token = create_access_token(identity=user_id, fresh=False, additional_claims={"is_administrator": True})
+            access_token = create_access_token(
+                identity=user_id,
+                fresh=False,
+                additional_claims={"is_administrator": True},
+            )
             return {"access_token": access_token}, HTTPStatus.OK
-        access_token = create_access_token(identity=user_id, fresh=False, additional_claims={"is_administrator": False})
+        access_token = create_access_token(
+            identity=user_id, fresh=False, additional_claims={"is_administrator": False}
+        )
         return {"access_token": access_token}, HTTPStatus.OK
-    
 
-@blp.route('/logout')
+
+@blp.route("/logout")
 class Logout(MethodView):
     @jwt_required(fresh=True)
     @blp.doc(description="Logs out user and revokes jwt")
@@ -140,4 +205,3 @@ class Logout(MethodView):
         db.session.add(token)
         db.session.commit()
         return {"message": "User successfully logged out"}, HTTPStatus.OK
-        
